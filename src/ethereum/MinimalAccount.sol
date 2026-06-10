@@ -18,6 +18,7 @@ contract MinimalAccount is IAccount, Ownable {
     {
         validationData = _validateSignature(userOp, userOpHash);
         // we need nonce validation
+        _payPrefund(missingAccountFunds);
     }
 
     /// @param userOpHash This the EIP-191 version of the signed hash
@@ -34,5 +35,13 @@ contract MinimalAccount is IAccount, Ownable {
         }
 
         return SIG_VALIDATION_SUCCESS;
+    }
+
+    /// @notice EntryPoint contract pays the gas funds
+    function _payPrefund(uint256 missingAccountFunds) internal {
+        if (missingAccountFunds > 0) {
+            (bool success, ) payable(msg.sender).call{value: missingAccountFunds gas: type(uint128).max}("");
+        require(success, "failed");
+        }
     }
 }
