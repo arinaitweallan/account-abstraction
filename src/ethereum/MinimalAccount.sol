@@ -10,6 +10,8 @@ import {SIG_VALIDATION_FAILED, SIG_VALIDATION_SUCCESS} from "lib/account-abstrac
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
 
 contract MinimalAccount is IAccount, Ownable {
+    error NotFromEntryPointOrOwner();
+
     IEntryPoint public immutable ENTRY_POINT;
 
     constructor(address _entryPoint) Ownable(msg.sender) {
@@ -18,8 +20,23 @@ contract MinimalAccount is IAccount, Ownable {
 
     /// modifiers
     modifier requireFromEntryPoint() {
-        require((msg.sender == address(ENTRY_POINT)), "not from entry point");
+        require(msg.sender == address(ENTRY_POINT), "not from entry point");
         _;
+    }
+
+    modifier requireFromEntryPointOrOwner() {
+        if (msg.sender != address(ENTRY_POINT) && msg.sender != owner()) {
+            revert NotFromEntryPointOrOwner();
+        }
+        _;
+    }
+
+    /// @dev callback to receive ether
+    receive() external payable {}
+
+    function execute(address dest, uint256 value, bytes calldata functionData) external requireFromEntryPointOrOwner {
+        (bool success,) = dest.call{value: value}(functionData);
+        require(success, "execute failed");
     }
 
     /// @notice A signature is valid if it's the `MinimalAccount` owner
