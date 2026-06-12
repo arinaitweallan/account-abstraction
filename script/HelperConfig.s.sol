@@ -53,6 +53,8 @@ contract HelperConfig is Script {
 
     function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
         if (localNetworkConfig.account != address(0)) {
+            console2.log("when not address(0), account is: ", localNetworkConfig.account);
+
             return localNetworkConfig;
         }
 
@@ -63,6 +65,7 @@ contract HelperConfig is Script {
         vm.stopBroadcast();
 
         localNetworkConfig = NetworkConfig({entryPoint: address(entryPoint), account: ANVIL_DEFAULT_WALLET});
+        console2.log("Account is: ", localNetworkConfig.account);
 
         return localNetworkConfig;
     }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.24;
 
-import {Script} from "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
 import {PackedUserOperation} from "lib/account-abstraction/contracts/interfaces/PackedUserOperation.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
 import {IEntryPoint} from "lib/account-abstraction/contracts/interfaces/IEntryPoint.sol";
@@ -12,14 +12,14 @@ contract SendPackedUserOp is Script {
 
     function run() public {}
 
-    function generateSignedUserOperation(bytes memory callData, HelperConfig.NetworkConfig memory config)
-        public
-        view
-        returns (PackedUserOperation memory)
-    {
-        uint256 nonce = vm.getNonce(config.account);
+    function generateSignedUserOperation(
+        bytes memory callData,
+        HelperConfig.NetworkConfig memory config,
+        address minimalAccount
+    ) public view returns (PackedUserOperation memory) {
+        uint256 nonce = vm.getNonce(minimalAccount) - 1;
         // generate the unsigned data
-        PackedUserOperation memory userOp = _generateUnsignedUserOperation(callData, config.account, nonce);
+        PackedUserOperation memory userOp = _generateUnsignedUserOperation(callData, minimalAccount, nonce);
 
         // get the userOpHash
         bytes32 userOpHash = IEntryPoint(config.entryPoint).getUserOpHash(userOp);
@@ -30,7 +30,7 @@ contract SendPackedUserOp is Script {
         uint8 v;
         bytes32 r;
         bytes32 s;
-        
+
         if (block.chainid == 31337) {
             (v, r, s) = vm.sign(ANVIL_DEFAULT_KEY, digest);
         } else {
