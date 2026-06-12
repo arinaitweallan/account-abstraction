@@ -50,7 +50,7 @@ contract MinimalAccount is IAccount, Ownable {
         _payPrefund(missingAccountFunds);
     }
 
-    /// @param userOpHash This the EIP-191 version of the signed hash
+    /// @param userOpHash This is the EIP-191 version of the signed hash
     function _validateSignature(PackedUserOperation calldata userOp, bytes32 userOpHash)
         internal
         view
